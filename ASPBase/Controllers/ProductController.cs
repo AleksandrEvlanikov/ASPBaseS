@@ -2,7 +2,13 @@
 using ASPBase.Services;
 using ASPBase.Services.Impl;
 using ASPBase.Services.Новая_папка;
+using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.Caching.Memory;
+using System.Diagnostics;
+using System.Globalization;
+using System.Net.Http.Headers;
 
 namespace ASPBase.Controllers
 {
@@ -11,10 +17,12 @@ namespace ASPBase.Controllers
     public class ProductController : ControllerBase
     {
         private IProductRepository _productRepository;
+        private IMemoryCache _memoryCache;
 
-        public ProductController(IProductRepository productRepository)
+        public ProductController(IProductRepository productRepository, IMemoryCache cache)
         {
             _productRepository = productRepository;
+            _memoryCache = cache;
         }
 
         [HttpPost("createProduct")]
@@ -67,5 +75,40 @@ namespace ASPBase.Controllers
         {
             return Ok(_productRepository.GetById(Id));
         }
+
+        [HttpGet("get-productCSVFile")]
+        public async Task<IActionResult> GetCSVFileGetProduct()
+        {
+
+            Stopwatch stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+            if (_memoryCache.TryGetValue("CSVCacheKey", out byte[] cashCsvBytes))
+            {
+                stopwatch.Stop();
+                Console.WriteLine($"Время выполнение из кеша {stopwatch.ElapsedMilliseconds}МС");
+                return File(cashCsvBytes, "text/csv", "CSVproducts.csv");
+            }
+
+            stopwatch.Restart();
+
+            IEnumerable<Product> products = _productRepository.GetAll();
+
+            string csvString = _productRepository.GetCsv(products);
+
+            byte[] csvBytes = System.Text.Encoding.UTF8.GetBytes(csvString);
+
+            _memoryCache.Set("CSVCacheKey", csvBytes, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+
+            });
+
+            stopwatch.Stop();
+            Console.WriteLine($"Время выполнение без кеша {stopwatch.ElapsedMilliseconds}МС");
+
+            return File(csvBytes, "text/csv", "CSVproducts.csv");
+        }
+
     }
 }

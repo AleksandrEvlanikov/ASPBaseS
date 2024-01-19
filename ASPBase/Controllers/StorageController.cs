@@ -64,5 +64,18 @@ namespace ASPBase.Controllers
         {
             return Ok(_storageRepository.GetById(Id));
         }
+
+        [HttpGet("get-storageCSVFile")]
+        public async Task<IActionResult> GetCSVFileGetProduct()
+        {
+            IEnumerable<Storage> storage = _storageRepository.GetAll();
+
+            string csvString = _storageRepository.GetCsv(storage);
+
+            byte[] csvBytes = System.Text.Encoding.UTF8.GetBytes(csvString);
+
+            return File(csvBytes, "text/csv", "CSVproducts.csv");
+
+        }
     }
 }

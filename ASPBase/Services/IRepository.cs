@@ -1,4 +1,6 @@
-﻿namespace ASPBase.Services
+﻿using ASPBase.Models;
+
+namespace ASPBase.Services
 {
     public interface IRepository<T, TId, TSurName> where T : class
     {
@@ -8,6 +10,8 @@
         int Update(T item);
         int Delete(TId id);
         int DeleteAll();
-        
+        string GetCsv(IEnumerable<T> items);
+
+
     }
 }

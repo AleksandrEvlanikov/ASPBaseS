@@ -1,16 +1,22 @@
 ﻿using ASPBase.Models;
 using MySqlConnector;
+using System.Text;
 
 namespace ASPBase.Services
 {
     public class StoregeRepository : IStorageRepository
     {
-        private const string connectionString = "Server=localhost;Port=3306;Database=ASPBase1Sem;User ID=root;Password=123456789Sasha;";
+        //private const string connectionString = "Server=localhost;Port=3306;Database=ASPBase1Sem;User ID=root;Password=123456789Sasha;";
+        private readonly MySqlConnection connection;
 
+        public StoregeRepository(MySqlConnection connection)
+        {
+            this.connection = connection;
+        }
 
         public int Create(Storage item)
         {
-            using MySqlConnection connection = new MySqlConnection(connectionString);
+            //using MySqlConnection connection = new MySqlConnection(connectionString);
             connection.Open();
 
             using MySqlCommand command = new MySqlCommand("INSERT INTO storage(Name, Description, ProductId) VALUES(@Name, @Description,  @ProductId)", connection);
@@ -35,8 +41,8 @@ namespace ASPBase.Services
 
         public int Update(Storage item)
         {
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
 
             using MySqlCommand command = new MySqlCommand("UPDATE storage SET Name = @Name, Description = @Description, ProductId = @ProductId WHERE Id=@Id", connection);
@@ -52,8 +58,8 @@ namespace ASPBase.Services
         public IList<Storage> GetAll()
         {
             List<Storage> list = new List<Storage>();
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
                 new MySqlCommand("SELECT * FROM storage", connection);
@@ -74,8 +80,8 @@ namespace ASPBase.Services
 
         public Storage GetById(int id)
         {
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
                 new MySqlCommand("SELECT * FROM storage WHERE Id=@Id", connection);
@@ -98,8 +104,8 @@ namespace ASPBase.Services
 
         public int Delete(int id)
         {
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
                 new MySqlCommand("DELETE FROM storage WHERE Id=@Id", connection);
@@ -110,14 +116,29 @@ namespace ASPBase.Services
 
         public int DeleteAll()
         {
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
                 new MySqlCommand("DELETE FROM storage", connection);
             //command.Parameters.AddWithValue("@ClientId", id);
             command.Prepare();
             return command.ExecuteNonQuery();
+        }
+
+        public string GetCsv(IEnumerable<Storage> storages)
+        {
+            StringBuilder sd = new StringBuilder();
+            sd.AppendLine("Name,Description,ProductId");
+
+            foreach (Storage storage in storages)
+            {
+                sd.AppendLine(storage.Name +
+                    "," + storage.Description +
+                    "," + storage.ProductId
+                    );
+            }
+            return sd.ToString();
         }
     }
 }

@@ -1,18 +1,24 @@
 ﻿using ASPBase.Models;
+using CsvHelper;
 using MySqlConnector;
 using System.Collections.Generic;
 using System.Data;
+using System.Text;
 
 namespace ASPBase.Services
 {
     public class ProductRepository : IProductRepository
     {
-        private const string connectionString = "Server=localhost;Port=3306;Database=ASPBase1Sem;User ID=root;Password=123456789Sasha;";
+        private readonly MySqlConnection connection;
 
+        public ProductRepository(MySqlConnection connection)
+        {
+            this.connection = connection;
+        }
 
         public int Create(Product item)
         {
-            using MySqlConnection connection = new MySqlConnection(connectionString);
+            //using MySqlConnection connection = new MySqlConnection();
             connection.Open();
 
             using MySqlCommand command = new MySqlCommand("INSERT INTO product(Name, Description, Price, CategoryId) VALUES(@Name, @Description, @Price, @CategoryId)", connection);
@@ -37,8 +43,8 @@ namespace ASPBase.Services
 
         public int Update(Product item)
         {
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
 
             using MySqlCommand command = new MySqlCommand("UPDATE product SET Name = @Name, Description = @Description, Price = @Price, CategoryId = @CategoryId WHERE Id=@Id", connection);
@@ -55,8 +61,8 @@ namespace ASPBase.Services
         public IList<Product> GetAll()
         {
             List<Product> list = new List<Product>();
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
                 new MySqlCommand("SELECT * FROM product", connection);
@@ -78,8 +84,8 @@ namespace ASPBase.Services
 
         public Product GetById(int id)
         {
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
                 new MySqlCommand("SELECT * FROM product WHERE Id=@Id", connection);
@@ -102,8 +108,8 @@ namespace ASPBase.Services
 
         public int Delete(int id)
         {
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
                 new MySqlCommand("DELETE FROM product WHERE Id=@Id", connection);
@@ -114,14 +120,30 @@ namespace ASPBase.Services
 
         public int DeleteAll()
         {
-            using MySqlConnection connection = new MySqlConnection();
-            connection.ConnectionString = connectionString;
+            //using MySqlConnection connection = new MySqlConnection();
+            //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
                 new MySqlCommand("DELETE FROM product", connection);
             //command.Parameters.AddWithValue("@ClientId", id);
             command.Prepare();
             return command.ExecuteNonQuery();
+        }
+
+        public string GetCsv(IEnumerable<Product> products)
+        {
+            StringBuilder sd = new StringBuilder();
+            sd.AppendLine("CategoryId,Name,Description,Price");
+
+            foreach (Product product in products)
+            {
+                sd.AppendLine(product.CategoryId +
+                    "," + product.Name +
+                    "," + product.Description +
+                    "," + product.Price
+                    );
+            }
+            return sd.ToString();
         }
 
     }

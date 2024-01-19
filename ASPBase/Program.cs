@@ -1,16 +1,20 @@
 
 using ASPBase.Models;
 using ASPBase.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.FileProviders;
 using MySqlConnector;
 using System.Data;
 
 namespace ASPBase
 {
+
     public class Program
     {
+        
         public static void Main(string[] args)
         {
-            ConfigureSqlLiteConnection();
+            
             var builder = WebApplication.CreateBuilder(args);
 
 
@@ -20,13 +24,38 @@ namespace ASPBase
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IStorageRepository, StoregeRepository>();
 
+            builder.Services.AddScoped<MySqlConnection>(provider =>
+            {
+                var connectionString = builder.Configuration.GetConnectionString("db");
+                return new MySqlConnection(connectionString);
+            });
+
+
+
 
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddMemoryCache();
 
             var app = builder.Build();
+
+
+            var staticFilePath = Path.Combine(Directory.GetCurrentDirectory(), "StaticFile");
+            Directory.CreateDirectory(staticFilePath);
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(staticFilePath),
+                RequestPath = "/static"
+            });
+
+
+            ConfigureMySqlConnection(app);
+
+
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -43,10 +72,11 @@ namespace ASPBase
             app.Run();
         }
 
-        private static void ConfigureSqlLiteConnection()
+        private static void ConfigureMySqlConnection(WebApplication app)
         {
-            string connectionString = "Server=localhost;Port=3306;Database=ASPBase1Sem;User ID=root;Password=123456789Sasha;";
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            string connectionString = app.Configuration.GetConnectionString("db");
+            using (MySqlConnection connection = new MySqlConnection(connectionString)) 
+
             {
                 connection.Open();
                 PrepareSchema(connection);
