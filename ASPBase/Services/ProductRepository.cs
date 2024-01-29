@@ -3,7 +3,9 @@ using CsvHelper;
 using MySqlConnector;
 using System.Collections.Generic;
 using System.Data;
+using System.Security.Policy;
 using System.Text;
+using static HotChocolate.ErrorCodes;
 
 namespace ASPBase.Services
 {
@@ -60,8 +62,9 @@ namespace ASPBase.Services
 
         public IList<Product> GetAll()
         {
+            string connectionString = "Server=localhost;Port=3306;Database=ASPBase1Sem;User ID=root;Password=123456789Sasha;";
             List<Product> list = new List<Product>();
-            //using MySqlConnection connection = new MySqlConnection();
+            using MySqlConnection connection = new MySqlConnection(connectionString);
             //connection.ConnectionString = connectionString;
             connection.Open();
             using MySqlCommand command =
@@ -75,7 +78,7 @@ namespace ASPBase.Services
                 client.Name = reader.GetString(1);
                 client.Description = reader.GetString(2);
                 //client.Storages = client.GetStoragesForProduct(3);
-                client.Price = reader.GetInt32(4);
+                client.Price = reader.GetInt32(3);
                 client.CategoryId = reader.GetInt32(4);
                 list.Add(client);
             }

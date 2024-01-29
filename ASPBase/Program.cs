@@ -1,10 +1,12 @@
 
-using ASPBase.Models;
+using ASPBase.GraphQL;
 using ASPBase.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.FileProviders;
 using MySqlConnector;
-using System.Data;
+using HotChocolate.AspNetCore;
+
+
+
 
 namespace ASPBase
 {
@@ -39,10 +41,14 @@ namespace ASPBase
             builder.Services.AddSwaggerGen();
             builder.Services.AddMemoryCache();
 
+
+            builder.Services.AddGraphQLServer()
+                .AddQueryType<RequestGraphQL>();
+
             var app = builder.Build();
 
 
-            var staticFilePath = Path.Combine(Directory.GetCurrentDirectory(), "StaticFile");
+            var staticFilePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "StaticFile");
             Directory.CreateDirectory(staticFilePath);
 
             app.UseStaticFiles(new StaticFileOptions
@@ -68,6 +74,7 @@ namespace ASPBase
 
 
             app.MapControllers();
+            app.MapGraphQL();
 
             app.Run();
         }
